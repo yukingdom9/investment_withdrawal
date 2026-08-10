@@ -3,16 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>積立投資 & 定率取崩シミュレーション</title>
+    <title>積立投資 & 定額取崩シミュレーション</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <main class="page">
       <header class="hero">
         <p class="eyebrow">Simulation</p>
-        <h1>積立投資 &amp; 定率取崩シミュレーション</h1>
+        <h1>積立投資 &amp; 定額取崩シミュレーション</h1>
         <p class="lead">
-          まず積立投資でどこまで資産を増やせるかを確認し、その最終残高をそのまま定率取崩シミュレーションの元本に引き継いで、取崩後の資産推移まで一気通貫で確認できます。
+          まず積立投資でどこまで資産を増やせるかを確認し、その最終残高をそのまま定額取崩シミュレーションの元本に引き継いで、取崩後の資産推移まで一気通貫で確認できます。
         </p>
       </header>
 
@@ -96,17 +96,17 @@
         </div>
       </div>
 
-      <!-- ============== Stage 2: 定率取崩 ============== -->
+      <!-- ============== Stage 2: 定額取崩 ============== -->
       <section class="stage" id="stage-withdraw">
         <div class="stage-label">
           <span class="stage-index">2</span>
-          <span class="stage-title">定率取崩フェーズ</span>
+          <span class="stage-title">定額取崩フェーズ</span>
         </div>
 
         <div class="app-shell">
           <section class="panel controls-panel">
-            <h2 class="panel-title">定率取崩シミュレーション</h2>
-            <p class="subtitle">一定の割合で取り崩す場合の、毎月の取崩額と資産推移を確認できます。</p>
+            <h2 class="panel-title">定額取崩シミュレーション</h2>
+            <p class="subtitle">毎月一定額を取り崩す場合の、資産推移と資産が尽きる時期を確認できます。</p>
 
             <label class="control">
               <div class="control-head">
@@ -130,33 +130,25 @@
 
             <label class="control">
               <div class="control-head">
-                <span>取崩率</span>
+                <span>毎月の取崩額</span>
                 <output id="w-withdrawal-value"></output>
               </div>
-              <input type="range" id="w-withdrawal" min="0" max="20" step="0.1" value="4" />
+              <input type="range" id="w-withdrawal" min="0" max="5000000" step="10000" value="200000" />
             </label>
           </section>
 
           <section class="panel chart-panel">
-            <div class="summary-grid summary-grid-4">
-              <article class="summary-card">
-                <h2>毎月の取崩額</h2>
-                <p id="w-withdrawal-initial">-</p>
-              </article>
-              <article class="summary-card">
-                <h2>20年後の取崩額</h2>
-                <p id="w-withdrawal-20y">-</p>
-              </article>
-              <article class="summary-card">
-                <h2>40年後の取崩額</h2>
-                <p id="w-withdrawal-40y">-</p>
-              </article>
+            <div class="summary-grid">
               <article class="summary-card">
                 <h2>最終残高</h2>
                 <p id="w-final-balance">-</p>
               </article>
+              <article class="summary-card">
+                <h2>資産が尽きる時期</h2>
+                <p id="w-breakdown-year">-</p>
+              </article>
             </div>
-            <svg id="withdraw-chart" viewBox="0 0 760 420" role="img" aria-label="定率取り崩しシミュレーションのグラフ"></svg>
+            <svg id="withdraw-chart" viewBox="0 0 760 420" role="img" aria-label="定額取り崩しシミュレーションのグラフ"></svg>
           </section>
         </div>
       </section>

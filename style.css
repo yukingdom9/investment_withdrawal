@@ -160,10 +160,6 @@ input[type="range"]:disabled {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.summary-grid-4 {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
 .summary-card {
   padding: 14px;
   border-radius: 16px;
@@ -406,15 +402,10 @@ svg {
   .share-card {
     flex-wrap: wrap;
   }
-
-  .summary-grid-4 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 520px) {
-  .summary-grid-3,
-  .summary-grid-4 {
+  .summary-grid-3 {
     grid-template-columns: 1fr;
   }
 }

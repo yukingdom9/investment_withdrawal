@@ -14,13 +14,6 @@ function formatPercent(value) {
   return `${value.toFixed(1)}%`;
 }
 
-function formatWithdrawAxis(value) {
-  return `${(value / 10000).toLocaleString("ja-JP", {
-    maximumFractionDigits: 0,
-    minimumFractionDigits: 0,
-  })}万円`;
-}
-
 function formatPrincipalAxis(value) {
   if (value >= 100000000) {
     const valueInOku = value / 100000000;
@@ -84,9 +77,7 @@ const w = {
   withdrawalValue: document.getElementById("w-withdrawal-value"),
 
   finalBalance: document.getElementById("w-final-balance"),
-  withdrawalInitial: document.getElementById("w-withdrawal-initial"),
-  withdrawal20y: document.getElementById("w-withdrawal-20y"),
-  withdrawal40y: document.getElementById("w-withdrawal-40y"),
+  breakdownYear: document.getElementById("w-breakdown-year"),
   chart: document.getElementById("withdraw-chart"),
 };
 
@@ -257,43 +248,41 @@ function renderAccumulate() {
 });
 
 // =====================================================================
-// Stage 2: 定率取崩シミュレーション
+// Stage 2: 定額取崩シミュレーション
 // =====================================================================
 
-function buildWithdrawalSeries(principal, annualRate, withdrawalRate) {
+function buildWithdrawalSeries(principal, annualRate, monthlyWithdrawal) {
   const monthlyRate = annualRate / 100 / 12;
   const months = 40 * 12;
   const points = [{ x: 0, y: principal }];
-  const bars = [];
   let balance = principal;
+  let breakdownMonth = null;
 
   for (let month = 1; month <= months; month += 1) {
-    const withdrawal = (balance * (withdrawalRate / 100)) / 12;
-    balance = balance + balance * monthlyRate - withdrawal;
-    bars.push(withdrawal);
+    balance = balance * (1 + monthlyRate) - monthlyWithdrawal;
 
     if (balance <= 0) {
       balance = 0;
+      if (breakdownMonth === null) {
+        breakdownMonth = month;
+      }
     }
 
     points.push({ x: month / 12, y: balance });
   }
 
-  return { points, bars };
+  return { points, breakdownMonth };
 }
 
-function drawWithdrawChart(series) {
+function drawWithdrawChart(points) {
   const width = 760;
   const height = 420;
-  const margin = { top: 24, right: 80, bottom: 48, left: 72 };
+  const margin = { top: 24, right: 24, bottom: 48, left: 84 };
   const plotWidth = width - margin.left - margin.right;
   const plotHeight = height - margin.top - margin.bottom;
-  const months = series.bars.length;
 
-  const maxLeft = getNiceMax(Math.max(...series.bars, 1) * 1.1);
-  const maxRight = getNiceMax(Math.max(...series.points.map((p) => p.y), 1) * 1.1);
-  const leftTicks = [0, 0.25, 0.5, 0.75, 1].map((t) => maxLeft * t);
-  const rightTicks = [0, 0.25, 0.5, 0.75, 1].map((t) => maxRight * t);
+  const maxValue = getNiceMax(Math.max(...points.map((p) => p.y), 1) * 1.1);
+  const ticks = [0, 0.25, 0.5, 0.75, 1].map((t) => maxValue * t);
 
   w.chart.innerHTML = "";
 
@@ -309,7 +298,7 @@ function drawWithdrawChart(series) {
     })
   );
 
-  leftTicks.forEach((tickValue, index) => {
+  ticks.forEach((tickValue, index) => {
     const y = margin.top + plotHeight * (1 - index / 4);
     w.chart.appendChild(
       svgEl("line", {
@@ -321,24 +310,11 @@ function drawWithdrawChart(series) {
       })
     );
     const label = svgEl("text", {
-      x: margin.left - 10,
-      y: y + 4,
-      fill: "#336485",
-      "font-size": 12,
-      "text-anchor": "end",
-    });
-    label.textContent = formatWithdrawAxis(tickValue);
-    w.chart.appendChild(label);
-  });
-
-  rightTicks.forEach((tickValue, index) => {
-    const y = margin.top + plotHeight * (1 - index / 4);
-    const label = svgEl("text", {
-      x: width - margin.right + 10,
+      x: margin.left - 12,
       y: y + 4,
       fill: "#7b8aa3",
       "font-size": 12,
-      "text-anchor": "start",
+      "text-anchor": "end",
     });
     label.textContent = formatPrincipalAxis(tickValue);
     w.chart.appendChild(label);
@@ -363,40 +339,13 @@ function drawWithdrawChart(series) {
     })
   );
 
-  const baselineY = margin.top + plotHeight;
-  const balancePoints = series.points.map((point) => {
+  const linePoints = points.map((point) => {
     const x = margin.left + (point.x / 40) * plotWidth;
-    const y = margin.top + plotHeight * (1 - Math.max(0, point.y) / maxRight);
+    const y = margin.top + plotHeight * (1 - Math.max(0, point.y) / maxValue);
     return { x, y };
   });
 
-  const areaData = [
-    `M${balancePoints[0].x.toFixed(2)} ${baselineY.toFixed(2)}`,
-    ...balancePoints.map((p) => `L${p.x.toFixed(2)} ${p.y.toFixed(2)}`),
-    `L${balancePoints[balancePoints.length - 1].x.toFixed(2)} ${baselineY.toFixed(2)}`,
-    "Z",
-  ].join(" ");
-  w.chart.appendChild(svgEl("path", { d: areaData, fill: "#D2DDE9", opacity: 0.85 }));
-
-  const balanceOutlineData = balancePoints
-    .map((p, index) => `${index === 0 ? "M" : "L"}${p.x.toFixed(2)} ${p.y.toFixed(2)}`)
-    .join(" ");
-  w.chart.appendChild(
-    svgEl("path", {
-      d: balanceOutlineData,
-      fill: "none",
-      stroke: "#B7BEC2",
-      "stroke-width": 0.75,
-      "stroke-linejoin": "round",
-    })
-  );
-
-  const withdrawalLinePoints = series.bars.map((value, index) => {
-    const x = margin.left + (index / months) * plotWidth;
-    const y = margin.top + plotHeight * (1 - Math.max(0, Math.min(maxLeft, value)) / maxLeft);
-    return { x, y };
-  });
-  const pathData = withdrawalLinePoints
+  const pathData = linePoints
     .map((p, index) => `${index === 0 ? "M" : "L"}${p.x.toFixed(2)} ${p.y.toFixed(2)}`)
     .join(" ");
   w.chart.appendChild(
@@ -422,68 +371,30 @@ function drawWithdrawChart(series) {
     label.textContent = `${year}年`;
     w.chart.appendChild(label);
   }
-
-  const legend = svgEl("g", {});
-  const lineLegend = svgEl("line", {
-    x1: margin.left + 8,
-    y1: 16,
-    x2: margin.left + 28,
-    y2: 16,
-    stroke: "#336485",
-    "stroke-width": 3.5,
-  });
-  legend.appendChild(lineLegend);
-
-  const lineText = svgEl("text", {
-    x: margin.left + 34,
-    y: 20,
-    fill: "#3c4a60",
-    "font-size": 12,
-  });
-  lineText.textContent = "毎月の取崩額";
-  legend.appendChild(lineText);
-
-  const barLegend = svgEl("rect", {
-    x: margin.left + 158,
-    y: 12,
-    width: 16,
-    height: 8,
-    fill: "#D2DDE9",
-    stroke: "#B7BEC2",
-    "stroke-width": 0.75,
-  });
-  legend.appendChild(barLegend);
-
-  const barText = svgEl("text", {
-    x: margin.left + 180,
-    y: 20,
-    fill: "#3c4a60",
-    "font-size": 12,
-  });
-  barText.textContent = "資産残高";
-  legend.appendChild(barText);
-
-  w.chart.appendChild(legend);
 }
 
 function renderWithdraw() {
   const principal = isLinked ? latestFinalBalance : Number(w.principal.value);
   const annualRate = Number(w.rate.value);
-  const withdrawalRate = Number(w.withdrawal.value);
+  const monthlyWithdrawal = Number(w.withdrawal.value);
 
   w.principalValue.value = formatCurrency(principal);
   w.rateValue.value = formatPercent(annualRate);
-  w.withdrawalValue.value = formatPercent(withdrawalRate);
+  w.withdrawalValue.value = formatCurrency(monthlyWithdrawal);
 
-  const { points, bars } = buildWithdrawalSeries(principal, annualRate, withdrawalRate);
+  const { points, breakdownMonth } = buildWithdrawalSeries(principal, annualRate, monthlyWithdrawal);
   const finalBalance = points[points.length - 1].y;
   w.finalBalance.textContent = formatCurrency(finalBalance);
 
-  w.withdrawalInitial.textContent = formatCurrency(bars[0] ?? 0);
-  w.withdrawal20y.textContent = formatCurrency(bars[20 * 12 - 1] ?? 0);
-  w.withdrawal40y.textContent = formatCurrency(bars[bars.length - 1] ?? 0);
+  if (breakdownMonth === null) {
+    w.breakdownYear.textContent = "40年以内に枯渇なし";
+  } else {
+    const years = Math.floor(breakdownMonth / 12);
+    const months = breakdownMonth % 12;
+    w.breakdownYear.textContent = `${years}年${months}か月`;
+  }
 
-  drawWithdrawChart({ points, bars });
+  drawWithdrawChart(points);
 
   syncShareUrl();
 }
