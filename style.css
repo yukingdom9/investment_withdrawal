@@ -66,7 +66,7 @@ body {
   align-items: center;
   gap: 10px;
   font-weight: 700;
-  color: #24466f;
+  color: #336485;
 }
 
 .stage-index {
@@ -76,7 +76,7 @@ body {
   width: 26px;
   height: 26px;
   border-radius: 999px;
-  background: #24466f;
+  background: #336485;
   color: #ffffff;
   font-size: 0.85rem;
 }
@@ -131,13 +131,14 @@ h2 {
 }
 
 output {
-  color: #24466f;
+  color: #336485;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
 input[type="range"] {
   width: 100%;
-  accent-color: #24466f;
+  accent-color: #4e79a7;
   cursor: pointer;
 }
 
@@ -230,7 +231,7 @@ svg {
   height: 36px;
   border-radius: 999px;
   background: #eaf0fb;
-  color: #24466f;
+  color: #336485;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -255,7 +256,7 @@ svg {
 }
 
 .connector-detail strong {
-  color: #24466f;
+  color: #336485;
   font-variant-numeric: tabular-nums;
 }
 
@@ -300,7 +301,7 @@ svg {
 }
 
 .switch input:checked + .switch-track {
-  background: #24466f;
+  background: #336485;
 }
 
 .switch input:checked + .switch-track::before {
@@ -308,7 +309,7 @@ svg {
 }
 
 .switch input:focus-visible + .switch-track {
-  outline: 2px solid #24466f;
+  outline: 2px solid #336485;
   outline-offset: 2px;
 }
 
@@ -324,7 +325,7 @@ svg {
   border: 1px solid #d5e0f3;
   border-radius: 12px;
   font-size: 0.82rem;
-  color: #24466f;
+  color: #336485;
 }
 
 .linked-readout.active {

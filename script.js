@@ -140,7 +140,6 @@ function drawAccumulateChart(balances, years) {
       height: plotHeight,
       fill: "#ffffff",
       stroke: "#dbe2ec",
-      rx: 12,
     })
   );
 
@@ -198,8 +197,8 @@ function drawAccumulateChart(balances, years) {
     svgEl("path", {
       d: pathData,
       fill: "none",
-      stroke: "#24466f",
-      "stroke-width": 3,
+      stroke: "#336485",
+      "stroke-width": 3.5,
       "stroke-linejoin": "round",
       "stroke-linecap": "round",
     })
@@ -300,7 +299,6 @@ function drawWithdrawChart(series) {
       height: plotHeight,
       fill: "#ffffff",
       stroke: "#dbe2ec",
-      rx: 12,
     })
   );
 
@@ -318,7 +316,7 @@ function drawWithdrawChart(series) {
     const label = svgEl("text", {
       x: margin.left - 10,
       y: y + 4,
-      fill: "#7b8aa3",
+      fill: "#336485",
       "font-size": 12,
       "text-anchor": "end",
     });
@@ -331,7 +329,7 @@ function drawWithdrawChart(series) {
     const label = svgEl("text", {
       x: width - margin.right + 10,
       y: y + 4,
-      fill: "#24466f",
+      fill: "#7b8aa3",
       "font-size": 12,
       "text-anchor": "start",
     });
@@ -359,47 +357,47 @@ function drawWithdrawChart(series) {
   );
 
   const baselineY = margin.top + plotHeight;
-  const barPoints = series.bars.map((value, index) => {
-    const x = margin.left + (index / months) * plotWidth;
-    const y = margin.top + plotHeight * (1 - Math.max(0, Math.min(maxLeft, value)) / maxLeft);
-    return { x, y };
-  });
-
-  const areaData = [
-    `M${barPoints[0].x.toFixed(2)} ${baselineY.toFixed(2)}`,
-    ...barPoints.map((p) => `L${p.x.toFixed(2)} ${p.y.toFixed(2)}`),
-    `L${barPoints[barPoints.length - 1].x.toFixed(2)} ${baselineY.toFixed(2)}`,
-    "Z",
-  ].join(" ");
-  w.chart.appendChild(svgEl("path", { d: areaData, fill: "#D2DDE9", opacity: 0.85 }));
-
-  const barOutlineData = barPoints
-    .map((p, index) => `${index === 0 ? "M" : "L"}${p.x.toFixed(2)} ${p.y.toFixed(2)}`)
-    .join(" ");
-  w.chart.appendChild(
-    svgEl("path", {
-      d: barOutlineData,
-      fill: "none",
-      stroke: "#B7BEC2",
-      "stroke-width": 1.25,
-      "stroke-linejoin": "round",
-    })
-  );
-
-  const linePoints = series.points.map((point) => {
+  const balancePoints = series.points.map((point) => {
     const x = margin.left + (point.x / 40) * plotWidth;
     const y = margin.top + plotHeight * (1 - Math.max(0, point.y) / maxRight);
     return { x, y };
   });
-  const pathData = linePoints
+
+  const areaData = [
+    `M${balancePoints[0].x.toFixed(2)} ${baselineY.toFixed(2)}`,
+    ...balancePoints.map((p) => `L${p.x.toFixed(2)} ${p.y.toFixed(2)}`),
+    `L${balancePoints[balancePoints.length - 1].x.toFixed(2)} ${baselineY.toFixed(2)}`,
+    "Z",
+  ].join(" ");
+  w.chart.appendChild(svgEl("path", { d: areaData, fill: "#D2DDE9", opacity: 0.85 }));
+
+  const balanceOutlineData = balancePoints
+    .map((p, index) => `${index === 0 ? "M" : "L"}${p.x.toFixed(2)} ${p.y.toFixed(2)}`)
+    .join(" ");
+  w.chart.appendChild(
+    svgEl("path", {
+      d: balanceOutlineData,
+      fill: "none",
+      stroke: "#B7BEC2",
+      "stroke-width": 0.75,
+      "stroke-linejoin": "round",
+    })
+  );
+
+  const withdrawalLinePoints = series.bars.map((value, index) => {
+    const x = margin.left + (index / months) * plotWidth;
+    const y = margin.top + plotHeight * (1 - Math.max(0, Math.min(maxLeft, value)) / maxLeft);
+    return { x, y };
+  });
+  const pathData = withdrawalLinePoints
     .map((p, index) => `${index === 0 ? "M" : "L"}${p.x.toFixed(2)} ${p.y.toFixed(2)}`)
     .join(" ");
   w.chart.appendChild(
     svgEl("path", {
       d: pathData,
       fill: "none",
-      stroke: "#24466f",
-      "stroke-width": 3,
+      stroke: "#336485",
+      "stroke-width": 3.5,
       "stroke-linejoin": "round",
       "stroke-linecap": "round",
     })
@@ -419,44 +417,44 @@ function drawWithdrawChart(series) {
   }
 
   const legend = svgEl("g", {});
+  const lineLegend = svgEl("line", {
+    x1: margin.left + 8,
+    y1: 16,
+    x2: margin.left + 28,
+    y2: 16,
+    stroke: "#336485",
+    "stroke-width": 3.5,
+  });
+  legend.appendChild(lineLegend);
+
+  const lineText = svgEl("text", {
+    x: margin.left + 34,
+    y: 20,
+    fill: "#3c4a60",
+    "font-size": 12,
+  });
+  lineText.textContent = "毎月の取崩額";
+  legend.appendChild(lineText);
+
   const barLegend = svgEl("rect", {
-    x: margin.left + 8,
+    x: margin.left + 158,
     y: 12,
     width: 16,
     height: 8,
     fill: "#D2DDE9",
     stroke: "#B7BEC2",
-    "stroke-width": 1.25,
+    "stroke-width": 0.75,
   });
   legend.appendChild(barLegend);
 
   const barText = svgEl("text", {
-    x: margin.left + 30,
-    y: 20,
-    fill: "#3c4a60",
-    "font-size": 12,
-  });
-  barText.textContent = "毎月の取崩額";
-  legend.appendChild(barText);
-
-  const lineLegend = svgEl("line", {
-    x1: margin.left + 150,
-    y1: 16,
-    x2: margin.left + 170,
-    y2: 16,
-    stroke: "#24466f",
-    "stroke-width": 3,
-  });
-  legend.appendChild(lineLegend);
-
-  const lineText = svgEl("text", {
     x: margin.left + 180,
     y: 20,
     fill: "#3c4a60",
     "font-size": 12,
   });
-  lineText.textContent = "資産残高";
-  legend.appendChild(lineText);
+  barText.textContent = "資産残高";
+  legend.appendChild(barText);
 
   w.chart.appendChild(legend);
 }
