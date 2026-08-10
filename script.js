@@ -49,6 +49,10 @@ function svgEl(tag, attrs) {
   return el;
 }
 
+function clamp(value, min, max) {
+  return Number.isNaN(value) ? min : Math.min(Math.max(value, min), max);
+}
+
 // =====================================================================
 // DOM参照と、フェーズ間で共有する状態
 // =====================================================================
@@ -89,6 +93,7 @@ const w = {
 const linkToggle = document.getElementById("link-toggle");
 const linkedReadout = document.getElementById("linked-readout");
 const connectorFinalBalance = document.getElementById("connector-final-balance");
+const copyLinkBtn = document.getElementById("copyLinkBtn");
 
 // 積立フェーズの最終残高（連携ONのときに取崩フェーズの元本として使われる）
 let latestFinalBalance = 0;
@@ -243,6 +248,8 @@ function renderAccumulate() {
   if (isLinked) {
     syncLinkedPrincipal();
   }
+
+  syncShareUrl();
 }
 
 [a.principal, a.monthly, a.rate, a.years].forEach((input) => {
@@ -477,6 +484,8 @@ function renderWithdraw() {
   w.withdrawal40y.textContent = formatCurrency(bars[bars.length - 1] ?? 0);
 
   drawWithdrawChart({ points, bars });
+
+  syncShareUrl();
 }
 
 [w.rate, w.withdrawal].forEach((input) => {
@@ -517,8 +526,84 @@ function setLinked(linked) {
 linkToggle.addEventListener("change", () => setLinked(linkToggle.checked));
 
 // =====================================================================
+// 共有リンク: 現在の設定をURLクエリパラメータに保存し、コピーする
+// =====================================================================
+
+function parseQueryState() {
+  const params = new URLSearchParams(window.location.search);
+  if ([...params.keys()].length === 0) {
+    return null;
+  }
+
+  const readParam = (key, input) =>
+    clamp(Number(params.get(key) ?? input.value), Number(input.min), Number(input.max));
+
+  return {
+    principal: readParam("principal", a.principal),
+    monthly: readParam("monthly", a.monthly),
+    rate: readParam("rate", a.rate),
+    years: readParam("years", a.years),
+    wPrincipal: readParam("wprincipal", w.principal),
+    wRate: readParam("wrate", w.rate),
+    wWithdrawal: readParam("wwithdrawal", w.withdrawal),
+    linked: params.has("linked") ? params.get("linked") !== "0" : isLinked,
+  };
+}
+
+function applyParsedState(parsed) {
+  if (!parsed) {
+    return;
+  }
+
+  a.principal.value = parsed.principal;
+  a.monthly.value = parsed.monthly;
+  a.rate.value = parsed.rate;
+  a.years.value = parsed.years;
+  w.principal.value = parsed.wPrincipal;
+  w.rate.value = parsed.wRate;
+  w.withdrawal.value = parsed.wWithdrawal;
+  linkToggle.checked = parsed.linked;
+  isLinked = parsed.linked;
+}
+
+function syncShareUrl() {
+  const params = new URLSearchParams({
+    principal: a.principal.value,
+    monthly: a.monthly.value,
+    rate: a.rate.value,
+    years: a.years.value,
+    wprincipal: w.principal.value,
+    wrate: w.rate.value,
+    wwithdrawal: w.withdrawal.value,
+    linked: isLinked ? "1" : "0",
+  });
+  const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+  window.history.replaceState(null, "", url);
+}
+
+function copyLink() {
+  const shareUrl = window.location.href;
+  navigator.clipboard
+    .writeText(shareUrl)
+    .then(() => {
+      copyLinkBtn.textContent = "リンクをコピーしました";
+      setTimeout(() => {
+        copyLinkBtn.textContent = "共有リンクをコピー";
+      }, 1800);
+    })
+    .catch(() => {
+      alert("共有リンクのコピーに失敗しました。URLを手動でコピーしてください。");
+    });
+}
+
+copyLinkBtn.addEventListener("click", copyLink);
+
+// =====================================================================
 // 初期描画
 // =====================================================================
+
+// URLにクエリパラメータがあれば、それを初期状態として各入力に反映する。
+applyParsedState(parseQueryState());
 
 // 連携の初期表示（disabled属性・注記の表示）を先に整えてから、
 // 積立側の初回計算を行う。renderAccumulate は連携中なら取崩側の

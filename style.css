@@ -332,6 +332,61 @@ svg {
   display: flex;
 }
 
+/* ---------- Share link ---------- */
+
+.share-row {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0;
+}
+
+.share-card {
+  width: min(560px, 100%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #ffffff;
+  border: 1px solid #dbe2ec;
+  border-radius: 18px;
+  padding: 14px 20px;
+  box-shadow: 0 12px 30px rgba(31, 45, 61, 0.06);
+}
+
+.share-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.share-title {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #1f2d3d;
+  margin: 0;
+}
+
+.share-detail {
+  margin: 2px 0 0;
+  font-size: 0.82rem;
+  color: #5b6b82;
+}
+
+.share-btn {
+  flex: none;
+  border: none;
+  background: #336485;
+  color: #ffffff;
+  padding: 12px 18px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.share-btn:hover {
+  background: #1b3557;
+}
+
 /* ---------- Responsive breakpoints ----------
    ここより上のルールをすべて上書きできるよう、レスポンシブ対応は
    スタイルシートの最後にまとめている。 */
@@ -345,6 +400,10 @@ svg {
 
 @media (max-width: 640px) {
   .connector-card {
+    flex-wrap: wrap;
+  }
+
+  .share-card {
     flex-wrap: wrap;
   }
 
